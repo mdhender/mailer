@@ -40,7 +40,6 @@ type Template struct {
 	dir                string           // root directory
 	ext                string           // extension
 	funcs              template.FuncMap // functions
-	loaded             bool
 }
 
 // NewTemplate creates a new Template and performs the initial load of all template
@@ -48,14 +47,14 @@ type Template struct {
 // The dir argument is the directory to load templates from.
 // The ext argument is extension of template files. It must include the
 // leading dot. For example, ".gohtml," not "gohtml."
-func NewTemplate(dir, ext string) (t *Template, err error) {
+func NewTemplate(dir, ext string, funcMap template.FuncMap) (t *Template, err error) {
 	if dir, err = filepath.Abs(dir); err != nil { // get absolute path
 		return nil, err
 	}
-	t = &Template{dir: dir, ext: ext}
-	//if err = t.Load(); err != nil {
-	//	return nil, err
-	//}
+	t = &Template{dir: dir, ext: ext, funcs: funcMap}
+	if err = t.Load(); err != nil {
+		return nil, err
+	}
 	return t, err
 }
 
@@ -69,17 +68,14 @@ func (t *Template) Ext() string {
 	return t.ext
 }
 
-// Funcs sets template functions
-func (t *Template) Funcs(funcMap template.FuncMap) {
-	t.Template = t.Template.Funcs(funcMap)
-	t.funcs = funcMap
-}
-
 // Load all templates by walking the template path, finding all files
 // that match the template extension, and loading each of them.
 func (t *Template) Load() (err error) {
 	// unnamed root template
 	var root = template.New("")
+	if t.funcs != nil {
+		root = root.Funcs(t.funcs)
+	}
 
 	var walkFunc = func(path string, info os.FileInfo, err error) (_ error) {
 		// handle walking error if any
@@ -128,17 +124,10 @@ func (t *Template) Load() (err error) {
 	}
 
 	t.Template = root // set or replace
-
-	t.loaded = true
 	return
 }
 
 // Render the template using the data provided.
 func (t *Template) Render(w io.Writer, name string, data interface{}) error {
-	if !t.loaded {
-		if err := t.Load(); err != nil {
-			return err
-		}
-	}
 	return t.ExecuteTemplate(w, name, data)
 }

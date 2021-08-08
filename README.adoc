@@ -1,0 +1,11 @@
+= mailer
+
+Mailer defines interfaces for sending and fetching e-mail.
+
+It also implements a template engine and some line-ending transformations to simplify generating messages.
+
+== Acknowledgments
+
+The templates code is derived from a
+https://gist.github.com/logrusorgru/abd846adb521a6fb39c7405f32fec0cf[gist]
+by Konstanin Ivanov (link:mailto:[kostyarin.ivanov@gmail.com]).

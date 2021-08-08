@@ -40,6 +40,7 @@ type Template struct {
 	dir                string           // root directory
 	ext                string           // extension
 	funcs              template.FuncMap // functions
+	loaded             bool
 }
 
 // NewTemplate creates a new Template and performs the initial load of all template
@@ -52,9 +53,9 @@ func NewTemplate(dir, ext string) (t *Template, err error) {
 		return nil, err
 	}
 	t = &Template{dir: dir, ext: ext}
-	if err = t.Load(); err != nil {
-		return nil, err
-	}
+	//if err = t.Load(); err != nil {
+	//	return nil, err
+	//}
 	return t, err
 }
 
@@ -127,10 +128,17 @@ func (t *Template) Load() (err error) {
 	}
 
 	t.Template = root // set or replace
+
+	t.loaded = true
 	return
 }
 
 // Render the template using the data provided.
 func (t *Template) Render(w io.Writer, name string, data interface{}) error {
+	if !t.loaded {
+		if err := t.Load(); err != nil {
+			return err
+		}
+	}
 	return t.ExecuteTemplate(w, name, data)
 }
